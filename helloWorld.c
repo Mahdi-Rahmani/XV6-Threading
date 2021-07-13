@@ -1,9 +1,9 @@
-#include "stat.h"
 #include "types.h"
+#include "stat.h"
 #include "user.h"
 
 int main()
 {
     example();
-    return 0;
+    exit();
 }
