@@ -93,5 +93,6 @@ sys_uptime(void)
 int
 sys_example(void)
 {
-  return example();
+  example();
+  return 0;
 }

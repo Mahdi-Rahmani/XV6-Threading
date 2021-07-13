@@ -535,6 +535,6 @@ procdump(void)
 
 int example()
 {
-  cprintf("Hello World!");
+  cprintf("Hello World!!!\n");
   return 0;
 }
