@@ -532,3 +532,9 @@ procdump(void)
     cprintf("\n");
   }
 }
+
+int example()
+{
+  cprintf("Hello World!");
+  return 0;
+}
