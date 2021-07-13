@@ -1,0 +1,3 @@
+/home/mahdi/CLionProjects/XV6/cmake-build-debug/CMakeFiles/rebuild_cache.dir
+/home/mahdi/CLionProjects/XV6/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/mahdi/CLionProjects/XV6/cmake-build-debug/CMakeFiles/XV6.dir

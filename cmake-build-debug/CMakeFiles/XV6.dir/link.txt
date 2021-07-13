@@ -1,0 +1,1 @@
+/usr/bin/cc -g   CMakeFiles/XV6.dir/main.c.o  -o XV6 
