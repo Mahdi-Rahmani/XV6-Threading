@@ -255,7 +255,7 @@ exit(void)
   // Pass abandoned children to init.
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->parent == curproc){
-      /* Shradha changes begin */
+      // Our changes begin
       if (p->isthread == 1){
         // p->state = ZOMBIE;
          kfree(p->kstack);
@@ -263,11 +263,11 @@ exit(void)
          p->state = UNUSED;
       }
       else {
-        /* Shradha changes end */
+        // Our changes begin
         p->parent = initproc;
         if(p->state == ZOMBIE)
           wakeup1(initproc);   
-        } //Shradha - added closing braces 
+        } //Our changes - added closing braces 
     }
   }
 
@@ -490,13 +490,13 @@ int
 kill(int pid)
 {
   struct proc *p;
-  struct proc *pc; //Shradha
+  struct proc *pc; // Our change
 
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){
       p->killed = 1;
-      /* Shradha changes begin */
+      // Our changes begin
       for(pc = ptable.proc; pc < &ptable.proc[NPROC]; pc++){
          if ((pc->parent == p) && (pc->isthread == 1)){
             pc->killed = 1;
@@ -504,7 +504,7 @@ kill(int pid)
                pc->state = RUNNABLE;
          }
       }
-      /* Shradha changes end */ 
+      // Our changes finish
       // Wake process from sleep if necessary.
       if(p->state == SLEEPING)
         p->state = RUNNABLE;
@@ -559,14 +559,16 @@ int example()
   return 0;
 }
 
-int clone(void (*func)(void *), void *arg, void *stack)
+int clone(void (*func)(void *), void *arg)
 {
 
    int i, pid;
    struct proc *np;
    int *myarg;
    int *myret;
-
+   void *stack = (void*) kalloc();
+   
+  
    if((np = allocproc()) == 0)
      return -1;
 
@@ -577,11 +579,6 @@ int clone(void (*func)(void *), void *arg, void *stack)
    np->stack = stack;
 
    np->tf->eax = 0; 
-
-   /*
-   *myarg = (int)arg;
-   *myret = np->tf->eip;
-   */
    
    np->tf->eip = (int)func;
 
@@ -612,11 +609,12 @@ int clone(void (*func)(void *), void *arg, void *stack)
    return pid;  
 }
 
-int join(void **stack)
+int join()
 {
 
   struct proc *p;
   int haveKids, pid;
+  
 
   acquire(&ptable.lock);
   for(;;) {
@@ -636,7 +634,6 @@ int join(void **stack)
         p->parent = 0;
         p->name[0] = 0;
         p->killed = 0;
-        *stack = p->stack;
         release(&ptable.lock);
         return pid;
       }

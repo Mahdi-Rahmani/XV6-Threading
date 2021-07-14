@@ -23,10 +23,10 @@ int getpid(void);
 char* sbrk(int);
 int sleep(int);
 int uptime(void);
+// Our Changes
 int example(void);
-// Shradha
-int clone(void (*)(void*), void *arg, void *stack);
-int join(void **stack);
+int thread_create(void (*)(void*), void *arg);
+int join();
 
 // ulib.c
 int stat(const char*, struct stat*);

@@ -120,10 +120,10 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
+// Our changes
 int             example(void);
-//Shradha changes begin
-int             clone(void (*func) (void*), void *arg, void *stack);
-int             join(void **stack);
+int             clone(void (*func) (void*), void *arg);
+int             join();
 
 // swtch.S
 void            swtch(struct context**, struct context*);

@@ -101,25 +101,25 @@ int sys_clone(void)
 {
   int func_add;
   int arg;
-  int stack_add;
+  //int stack_add;
 
   if (argint(0, &func_add) < 0)
      return -1;
   if (argint(1, &arg) < 0)
      return -1;
-  if (argint(2, &stack_add) < 0)
-     return -1;
+  //if (argint(2, &stack_add) < 0)
+  //   return -1;
  
-  return clone((void *)func_add, (void *)arg, (void *)stack_add);
+  return clone((void *)func_add, (void *)arg);
   
 }
 
 int sys_join(void)
 {
-  int stack_add;
+  //int stack_add;
 
-  if (argint(0, &stack_add) < 0)
-     return -1;
+  //if (argint(0, &stack_add) < 0)
+   //  return -1;
 
-  return join((void **)stack_add);
+  return join();
 }

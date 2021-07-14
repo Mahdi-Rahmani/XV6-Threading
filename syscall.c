@@ -129,9 +129,9 @@ static int (*syscalls[])(void) = {
 [SYS_link]    sys_link,
 [SYS_mkdir]   sys_mkdir,
 [SYS_close]   sys_close,
+// Our changes
 [SYS_example] sys_example,
-// Shradha changes
-[SYS_clone]   sys_clone,
+[SYS_thread_create]   sys_clone,
 [SYS_join]    sys_join,
 };
 
