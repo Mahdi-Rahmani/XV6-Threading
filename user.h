@@ -24,6 +24,9 @@ char* sbrk(int);
 int sleep(int);
 int uptime(void);
 int example(void);
+// Shradha
+int clone(void (*)(void*), void *arg, void *stack);
+int join(void **stack);
 
 // ulib.c
 int stat(const char*, struct stat*);
