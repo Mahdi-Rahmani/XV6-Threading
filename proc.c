@@ -255,9 +255,19 @@ exit(void)
   // Pass abandoned children to init.
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->parent == curproc){
-      p->parent = initproc;
-      if(p->state == ZOMBIE)
-        wakeup1(initproc);
+      // Our changes begin
+      if (p->isthread == 1){
+        // p->state = ZOMBIE;
+         kfree(p->kstack);
+         p->kstack = 0;
+         p->state = UNUSED;
+      }
+      else {
+        // Our changes begin
+        p->parent = initproc;
+        if(p->state == ZOMBIE)
+          wakeup1(initproc);   
+        } //Our changes - added closing braces 
     }
   }
 
@@ -480,11 +490,21 @@ int
 kill(int pid)
 {
   struct proc *p;
+  struct proc *pc; // Our change
 
   acquire(&ptable.lock);
   for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
     if(p->pid == pid){
       p->killed = 1;
+      // Our changes begin
+      for(pc = ptable.proc; pc < &ptable.proc[NPROC]; pc++){
+         if ((pc->parent == p) && (pc->isthread == 1)){
+            pc->killed = 1;
+            if (pc->state == SLEEPING)
+               pc->state = RUNNABLE;
+         }
+      }
+      // Our changes finish
       // Wake process from sleep if necessary.
       if(p->state == SLEEPING)
         p->state = RUNNABLE;
@@ -533,10 +553,99 @@ procdump(void)
   }
 }
 
-// print "hello world" sentence
-int
-example(void)
+int example()
 {
-  cprintf("hello world\n");
+  cprintf("Hello World!!!\n");
   return 0;
-} 
+}
+
+int clone(void (*func)(void *), void *arg)
+{
+
+   int i, pid;
+   struct proc *np;
+   int *myarg;
+   int *myret;
+   void *stack = (void*) kalloc();
+   
+  
+   if((np = allocproc()) == 0)
+     return -1;
+
+   np->pgdir = myproc()->pgdir; 
+   np->sz = myproc()->sz;
+   np->parent = myproc();
+   *np->tf = *myproc()->tf;
+   np->stack = stack;
+
+   np->tf->eax = 0; 
+   
+   np->tf->eip = (int)func;
+
+   myret = stack + 4096 - 2 * sizeof(int *);
+   *myret = 0xFFFFFFFF;
+   
+   myarg = stack + 4096 - sizeof(int *);
+   *myarg = (int)arg;
+
+   np->tf->esp = (int)stack +  PGSIZE - 2 * sizeof(int *);
+   np->tf->ebp = np->tf->esp;
+
+   np->isthread = 1;
+  
+   for(i = 0; i < NOFILE; i++)
+     if(myproc()->ofile[i])
+       np->ofile[i] = filedup(myproc()->ofile[i]);
+   np->cwd = idup(myproc()->cwd);
+
+   safestrcpy(np->name, myproc()->name, sizeof(myproc()->name));
+
+   pid = np->pid;
+
+   acquire(&ptable.lock);
+   np->state = RUNNABLE;
+   release(&ptable.lock);
+
+   return pid;  
+}
+
+int join()
+{
+
+  struct proc *p;
+  int haveKids, pid;
+  
+
+  acquire(&ptable.lock);
+  for(;;) {
+    haveKids = 0;
+
+    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+      if (p->parent != myproc() || p->isthread != 1 )
+        continue;
+      haveKids = 1;
+
+      if (p->state == ZOMBIE) {
+        pid = p->pid;
+        kfree(p->kstack);
+        p->kstack = 0;
+        p->state = UNUSED;
+        p->pid = 0;
+        p->parent = 0;
+        p->name[0] = 0;
+        p->killed = 0;
+        release(&ptable.lock);
+        return pid;
+      }
+    }
+    
+    if (!haveKids || myproc()->killed) {
+      release(&ptable.lock);
+      return -1;
+    }
+
+    sleep(myproc(), &ptable.lock);
+
+  }
+  return 0;
+}

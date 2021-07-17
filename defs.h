@@ -120,7 +120,10 @@ void            userinit(void);
 int             wait(void);
 void            wakeup(void*);
 void            yield(void);
-int             example(void);    
+// Our changes
+int             example(void);
+int             clone(void (*func) (void*), void *arg);
+int             join();
 
 // swtch.S
 void            swtch(struct context**, struct context*);
