@@ -25,7 +25,7 @@ int sleep(int);
 int uptime(void);
 // Our Changes
 int example(void);
-int clone(void (*)(void*), void *arg);
+int clone(void *stack);
 int join();
 
 // ulib.c

@@ -562,7 +562,7 @@ int example()
 }
 
 
-int clone( void *arg, void *stack)
+int clone(void *stack)
 {
   // i is acounter of for loop and pid is the output of this sys_call
   int i, pid;
@@ -592,13 +592,16 @@ int clone( void *arg, void *stack)
   child_thread->tf->eax = 0;                                        // Clear %eax so that thread returns 0 in the child.
 
   child_thread->stack = stack;                                     // set the stack field in child thread 
-  
+
+  // copy the parent stack in child stack
+  memmove(stack, (void*) main_thread->tf->ebp, main_thread->tf->ebp - main_thread->tf->esp);
+
   // initialize the argc and argv 
   myret = stack + 4096 - 2 * sizeof(int *);
   *myret = 0xFFFFFFFF;
    
   myarg = stack + 4096 - sizeof(int *);
-  *myarg = (int)arg;
+  *myarg = (int)1;
 
   // copy the open files
   for(i = 0; i < NOFILE; i++)

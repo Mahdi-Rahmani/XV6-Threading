@@ -115,7 +115,7 @@ int sys_clone(void)
     cprintf("Error! somthing wrong with the entry stack");
     return -1;
   }
-  return clone((void *)func_add, (void *)arg, (void *)stack_add);
+  return clone((void *)stack_add);
   
 }
 
