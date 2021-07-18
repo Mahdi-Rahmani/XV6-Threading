@@ -562,56 +562,56 @@ int example()
 }
 
 
-int clone(void (*func)(void *), void *arg)
+int clone( void *arg, void *stack)
 {
-
+  // i is acounter of for loop and pid is the output of this sys_call
   int i, pid;
-  struct proc *np;
-  struct proc *curproc = myproc();
+  // hold father thread in main_thread struct
+  struct proc *main_thread = myproc();
+  // create new child thread and hold it in child_thread struct
+  struct proc *child_thread;
 
   int *myarg;
   int *myret;
-  void *stack = (void*) kalloc();
-   
-  
-  if((np = allocproc()) == 0)
+  // if the instructionn (child_thread = allocproc()) isn't done succefully we rturn -1
+  if((child_thread = allocproc()) == 0)
     return -1;
 
-  // in thread the parent thread and the child are point to one pagetable
-  np->pgdir = curproc->pgdir; 
-  // the below 3 lines are the same as fork
-  np->sz = curproc->sz;
-  np->parent = curproc;
-  *np->tf = *curproc->tf;
+  // now we should fill some fields o shild_thread struct
 
-  np->stack = stack;
-  // Clear %eax so that thread returns 0 in the child.
-  np->tf->eax = 0; 
+  // in thread the parent thread and the child are point to one pagetable
+  child_thread->pgdir = main_thread->pgdir; 
+  child_thread->sz = main_thread->sz;
+  child_thread->parent = main_thread;
+  child_thread->isthread = 1;                                       // show that this is a thread and set the related field in proc struct
+
+  *child_thread->tf = *main_thread->tf;                             //trap frame of main thread and child thread are the same
+  //child_thread->tf->eip = (int)func;                              
+  child_thread->tf->esp = (int)stack +  PGSIZE - 2 * sizeof(int *); // put stack pointer at the end of allocated page - 2
+  child_thread->tf->ebp = child_thread->tf->esp;                    // set stack base pointer and indicate that the stck is empty now
+  child_thread->tf->eax = 0;                                        // Clear %eax so that thread returns 0 in the child.
+
+  child_thread->stack = stack;                                     // set the stack field in child thread 
   
-  np->tf->eip = (int)func;
-  
+  // initialize the argc and argv 
   myret = stack + 4096 - 2 * sizeof(int *);
   *myret = 0xFFFFFFFF;
    
   myarg = stack + 4096 - sizeof(int *);
   *myarg = (int)arg;
 
-  np->tf->esp = (int)stack +  PGSIZE - 2 * sizeof(int *);
-  np->tf->ebp = np->tf->esp;
-
-  np->isthread = 1;
-  
+  // copy the open files
   for(i = 0; i < NOFILE; i++)
-    if(curproc->ofile[i])
-      np->ofile[i] = filedup(curproc->ofile[i]);
-  np->cwd = idup(curproc->cwd);
+    if(main_thread->ofile[i])
+      child_thread->ofile[i] = filedup(main_thread->ofile[i]);
+  child_thread->cwd = idup(main_thread->cwd);
 
-  safestrcpy(np->name, curproc->name, sizeof(curproc->name));
+  safestrcpy(child_thread->name, main_thread->name, sizeof(main_thread->name));
 
-  pid = np->pid;
+  pid = child_thread->pid;
 
   acquire(&ptable.lock);
-  np->state = RUNNABLE;
+  child_thread->state = RUNNABLE;
   release(&ptable.lock);
 
   return pid;  
@@ -622,20 +622,20 @@ int join()
 
   struct proc *p;
   int haveKids, pid;
-  
+  struct proc *curproc = myproc();
 
   acquire(&ptable.lock);
   for(;;) {
     haveKids = 0;
 
     for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-      if (p->parent != myproc() || p->isthread != 1 )
+      if (p->parent != curproc || p->isthread != 1 )
         continue;
       haveKids = 1;
 
       if (p->state == ZOMBIE) {
         pid = p->pid;
-        kfree(p->kstack);
+        kfree(p->stack);
         p->kstack = 0;
         p->state = UNUSED;
         p->pid = 0;
@@ -647,12 +647,12 @@ int join()
       }
     }
     
-    if (!haveKids || myproc()->killed) {
+    if (!haveKids || curproc->killed) {
       release(&ptable.lock);
       return -1;
     }
 
-    sleep(myproc(), &ptable.lock);
+    sleep(curproc, &ptable.lock);
 
   }
   return 0;
