@@ -50,7 +50,7 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
-  int isthread;                // Shradha change to indicate if it is a thread
+  int isthread;                // we change to indicate if it is a thread
   void *stack;
 };
 

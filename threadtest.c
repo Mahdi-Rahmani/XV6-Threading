@@ -17,7 +17,7 @@ int main()
 
 	// Start all children
 	for (i=0; i<NUM_THREADS; i++) {
-		int pid = thread_create(thread, args);
+		int pid = clone(thread, args);
 		printf(1, "main: created thread with pid %d\n", pid);
 	}
 	

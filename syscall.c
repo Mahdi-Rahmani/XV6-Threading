@@ -131,7 +131,7 @@ static int (*syscalls[])(void) = {
 [SYS_close]   sys_close,
 // Our changes
 [SYS_example] sys_example,
-[SYS_thread_create]   sys_clone,
+[SYS_clone]   sys_clone,
 [SYS_join]    sys_join,
 };
 

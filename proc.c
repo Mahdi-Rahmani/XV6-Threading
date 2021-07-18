@@ -553,60 +553,68 @@ procdump(void)
   }
 }
 
+// print Hello World!!! 
+// simple test of systemcall
 int example()
 {
   cprintf("Hello World!!!\n");
   return 0;
 }
 
+
 int clone(void (*func)(void *), void *arg)
 {
 
-   int i, pid;
-   struct proc *np;
-   int *myarg;
-   int *myret;
-   void *stack = (void*) kalloc();
+  int i, pid;
+  struct proc *np;
+  struct proc *curproc = myproc();
+
+  int *myarg;
+  int *myret;
+  void *stack = (void*) kalloc();
    
   
-   if((np = allocproc()) == 0)
-     return -1;
+  if((np = allocproc()) == 0)
+    return -1;
 
-   np->pgdir = myproc()->pgdir; 
-   np->sz = myproc()->sz;
-   np->parent = myproc();
-   *np->tf = *myproc()->tf;
-   np->stack = stack;
+  // in thread the parent thread and the child are point to one pagetable
+  np->pgdir = curproc->pgdir; 
+  // the below 3 lines are the same as fork
+  np->sz = curproc->sz;
+  np->parent = curproc;
+  *np->tf = *curproc->tf;
 
-   np->tf->eax = 0; 
-   
-   np->tf->eip = (int)func;
-
-   myret = stack + 4096 - 2 * sizeof(int *);
-   *myret = 0xFFFFFFFF;
-   
-   myarg = stack + 4096 - sizeof(int *);
-   *myarg = (int)arg;
-
-   np->tf->esp = (int)stack +  PGSIZE - 2 * sizeof(int *);
-   np->tf->ebp = np->tf->esp;
-
-   np->isthread = 1;
+  np->stack = stack;
+  // Clear %eax so that thread returns 0 in the child.
+  np->tf->eax = 0; 
   
-   for(i = 0; i < NOFILE; i++)
-     if(myproc()->ofile[i])
-       np->ofile[i] = filedup(myproc()->ofile[i]);
-   np->cwd = idup(myproc()->cwd);
+  np->tf->eip = (int)func;
+  
+  myret = stack + 4096 - 2 * sizeof(int *);
+  *myret = 0xFFFFFFFF;
+   
+  myarg = stack + 4096 - sizeof(int *);
+  *myarg = (int)arg;
 
-   safestrcpy(np->name, myproc()->name, sizeof(myproc()->name));
+  np->tf->esp = (int)stack +  PGSIZE - 2 * sizeof(int *);
+  np->tf->ebp = np->tf->esp;
 
-   pid = np->pid;
+  np->isthread = 1;
+  
+  for(i = 0; i < NOFILE; i++)
+    if(curproc->ofile[i])
+      np->ofile[i] = filedup(curproc->ofile[i]);
+  np->cwd = idup(curproc->cwd);
 
-   acquire(&ptable.lock);
-   np->state = RUNNABLE;
-   release(&ptable.lock);
+  safestrcpy(np->name, curproc->name, sizeof(curproc->name));
 
-   return pid;  
+  pid = np->pid;
+
+  acquire(&ptable.lock);
+  np->state = RUNNABLE;
+  release(&ptable.lock);
+
+  return pid;  
 }
 
 int join()
