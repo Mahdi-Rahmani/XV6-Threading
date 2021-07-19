@@ -585,24 +585,17 @@ int clone(void *stack)
   child_thread->parent = main_thread;
   child_thread->isthread = 1;                                       // show that this is a thread and set the related field in proc struct
 
-  *child_thread->tf = *main_thread->tf;                             //trap frame of main thread and child thread are the same
-  //child_thread->tf->eip = (int)func;                              
-  //child_thread->tf->esp = (int)stack +  PGSIZE - 2 * sizeof(int *); // put stack pointer at the end of allocated page - 2
-  //child_thread->tf->ebp = child_thread->tf->esp;                    // set stack base pointer and indicate that the stck is empty now
+  *child_thread->tf = *main_thread->tf;                             // trap frame of main thread and child thread are the same
   child_thread->tf->eax = 0;                                        // Clear %eax so that thread returns 0 in the child.
+  child_thread->stack = stack;                                      // set the stack field in child thread 
 
-  child_thread->stack = stack;                                     // set the stack field in child thread 
-
-  // copy the parent stack in child stack
-  //memmove(stack, (void*) main_thread->tf->esp, main_thread->tf->ebp - main_thread->tf->esp);
-  //memmove((void*) child_thread->tf->esp, (const void*) main_thread->tf->esp, *(int*)main_thread->tf->ebp - main_thread->tf->esp);
-
-  void *down_copy = (void*)main_thread->tf->ebp +16;
+  // copy the parent stack in child stack and set stack pointer
+  void *down_copy = (void*)main_thread->tf->ebp + 2 * sizeof(int *);
   void *top_copy = (void*)main_thread->tf->esp;
-   uint copysize = (uint)(down_copy - top_copy);
-  child_thread->tf->esp = (uint) (stack - copysize);
-  child_thread->tf->ebp = (uint) (stack -16);
-  memmove(stack-copysize,top_copy,copysize);
+  uint copysize = (uint)(down_copy - top_copy);
+  child_thread->tf->esp = (uint) (stack + PGSIZE - copysize);
+  child_thread->tf->ebp = (uint) (stack + PGSIZE - 2 * sizeof(int *));
+  memmove(stack + PGSIZE - copysize,top_copy,copysize);
   // initialize the argc and argv 
   myret = stack + 4096 - 2 * sizeof(int *);
   *myret = 0xFFFFFFFF;
