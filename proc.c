@@ -571,8 +571,8 @@ int clone(void *stack)
   // create new child thread and hold it in child_thread struct
   struct proc *child_thread;
 
-  int *myarg;
-  int *myret;
+  //int *myarg;
+  //int *myret;
   // if the instructionn (child_thread = allocproc()) isn't done succefully we rturn -1
   if((child_thread = allocproc()) == 0)
     return -1;
@@ -590,19 +590,18 @@ int clone(void *stack)
   child_thread->stack = stack;                                      // set the stack field in child thread 
   
   // copy the parent stack in child stack and set stack pointer
-  void *down_copy = (void*)main_thread->tf->ebp + 2 * sizeof(int *);
+  void *down_copy = (void*)main_thread->tf->ebp + 16;
   void *top_copy = (void*)main_thread->tf->esp;
   uint copysize = (uint)(down_copy - top_copy);
   child_thread->tf->esp = (uint) (stack + PGSIZE - copysize);
-  child_thread->tf->ebp = (uint) (stack + PGSIZE - 2 * sizeof(int *));
-  // child_thread->tf->eip = child_thread->tf->ebp + 1 * sizeof(int *);
+  child_thread->tf->ebp = (uint) (stack + PGSIZE - 16);
   memmove(stack + PGSIZE - copysize,top_copy,copysize);
   // initialize the argc and argv 
-  myret = stack + 4096 - 2 * sizeof(int *);
-  *myret = 0xFFFFFFFF;
+  //myret = stack + 4096 - 2 * sizeof(int *);
+  //*myret = 0xFFFFFFFF;
    
-  myarg = stack + 4096 - sizeof(int *);
-  *myarg = (int)1;
+  // myarg = stack + 4096 - sizeof(int *);
+  //*myarg = (int)1;
 
   // copy the open files
   for(i = 0; i < NOFILE; i++)
