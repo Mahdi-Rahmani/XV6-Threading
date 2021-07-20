@@ -122,7 +122,7 @@ void            wakeup(void*);
 void            yield(void);
 // Our changes
 int             example(void);
-int             clone(void (*func) (void*), void *arg);
+int             clone(void *stack);
 int             join();
 
 // swtch.S

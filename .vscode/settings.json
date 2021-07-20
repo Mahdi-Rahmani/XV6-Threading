@@ -1,9 +1,13 @@
 {
     "files.associations": {
+<<<<<<< HEAD
         "defs.h": "c",
         "stat.h": "c",
         "cstdlib": "c",
         "types.h": "c",
         "user.h": "c"
+=======
+        "defs.h": "c"
+>>>>>>> Main
     }
 }
