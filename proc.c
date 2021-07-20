@@ -88,6 +88,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+  p->isthread = 0;
 
   release(&ptable.lock);
 
@@ -138,6 +139,7 @@ userinit(void)
   p->tf->eflags = FL_IF;
   p->tf->esp = PGSIZE;
   p->tf->eip = 0;  // beginning of initcode.S
+  p->isthread = 0;
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
@@ -565,20 +567,26 @@ int example()
 int clone(void *stack)
 {
   // i is acounter of for loop and pid is the output of this sys_call
-  int i, pid;
+  int i, pid, added_size;
   // hold father thread in main_thread struct
   struct proc *main_thread = myproc();
   // create new child thread and hold it in child_thread struct
   struct proc *child_thread;
 
-  //int *myarg;
-  //int *myret;
   // if the instructionn (child_thread = allocproc()) isn't done succefully we rturn -1
   if((child_thread = allocproc()) == 0)
     return -1;
+  
+  // Grow size of process because of new stack
+  if ((added_size = growproc(PGSIZE)) < 0)
+  {
+    cprintf("Could not grow process.\n");
+    return -1;
+  }
+  cprintf("current size of process: %d\n", (int)main_thread->sz);
+  
 
   // now we should fill some fields o shild_thread struct
-
   // in thread the parent thread and the child are point to one pagetable
   child_thread->pgdir = main_thread->pgdir; 
   child_thread->sz = main_thread->sz;
@@ -596,12 +604,6 @@ int clone(void *stack)
   child_thread->tf->esp = (uint) (stack + PGSIZE - copysize);
   child_thread->tf->ebp = (uint) (stack + PGSIZE - 16);
   memmove(stack + PGSIZE - copysize,top_copy,copysize);
-  // initialize the argc and argv 
-  //myret = stack + 4096 - 2 * sizeof(int *);
-  //*myret = 0xFFFFFFFF;
-   
-  // myarg = stack + 4096 - sizeof(int *);
-  //*myarg = (int)1;
 
   // copy the open files
   for(i = 0; i < NOFILE; i++)
@@ -645,6 +647,11 @@ int join()
         p->parent = 0;
         p->name[0] = 0;
         p->killed = 0;
+
+        // Decrease size of memory because of freeing the stack
+        growproc(-1 * PGSIZE);
+        cprintf("current size of process: %d\n", (int)curproc->sz);
+
         release(&ptable.lock);
         return pid;
       }
