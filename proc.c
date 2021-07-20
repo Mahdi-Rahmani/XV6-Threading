@@ -284,8 +284,8 @@ exit(void)
 int
 wait(void)
 {
-  struct proc *p;
-  int havekids, pid;
+  struct proc *p, *q;
+  int havekids, pid, found;
   struct proc *curproc = myproc();
   
   acquire(&ptable.lock);
@@ -296,12 +296,19 @@ wait(void)
       if(p->parent != curproc)
         continue;
       havekids = 1;
+      found = 0;
       if(p->state == ZOMBIE){
         // Found one.
         pid = p->pid;
         kfree(p->kstack);
         p->kstack = 0;
-        freevm(p->pgdir);
+
+        for (q = ptable.proc; q < &ptable.proc[NPROC]; q++)
+          if (q->isthread && q->parent == p && q != p)
+            found = 1;
+        if (!found)
+          freevm(p->pgdir);
+        
         p->pid = 0;
         p->parent = 0;
         p->name[0] = 0;
@@ -647,6 +654,7 @@ int join()
         p->parent = 0;
         p->name[0] = 0;
         p->killed = 0;
+        p->isthread = 0;
 
         // Decrease size of memory because of freeing the stack
         growproc(-1 * PGSIZE);
