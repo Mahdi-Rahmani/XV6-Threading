@@ -300,7 +300,9 @@ wait(void)
       if(p->state == ZOMBIE){
         // Found one.
         pid = p->pid;
+        cprintf("before kstack.\n");
         kfree(p->kstack);
+        cprintf("after ^^^^^^^^\n");
         p->kstack = 0;
 
         for (q = ptable.proc; q < &ptable.proc[NPROC]; q++)
@@ -313,6 +315,7 @@ wait(void)
         p->parent = 0;
         p->name[0] = 0;
         p->killed = 0;
+        cprintf("#########.\n");
         p->state = UNUSED;
         release(&ptable.lock);
         return pid;
