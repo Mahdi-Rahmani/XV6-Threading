@@ -553,67 +553,14 @@ procdump(void)
   }
 }
 
-<<<<<<< HEAD
-=======
 // print Hello World!!! 
 // simple test of systemcall
->>>>>>> Main
 int example()
 {
   cprintf("Hello World!!!\n");
   return 0;
 }
 
-<<<<<<< HEAD
-int clone(void (*func)(void *), void *arg)
-{
-
-   int i, pid;
-   struct proc *np;
-   int *myarg;
-   int *myret;
-   void *stack = (void*) kalloc();
-   
-  
-   if((np = allocproc()) == 0)
-     return -1;
-
-   np->pgdir = myproc()->pgdir; 
-   np->sz = myproc()->sz;
-   np->parent = myproc();
-   *np->tf = *myproc()->tf;
-   np->stack = stack;
-
-   np->tf->eax = 0; 
-   
-   np->tf->eip = (int)func;
-
-   myret = stack + 4096 - 2 * sizeof(int *);
-   *myret = 0xFFFFFFFF;
-   
-   myarg = stack + 4096 - sizeof(int *);
-   *myarg = (int)arg;
-
-   np->tf->esp = (int)stack +  PGSIZE - 2 * sizeof(int *);
-   np->tf->ebp = np->tf->esp;
-
-   np->isthread = 1;
-  
-   for(i = 0; i < NOFILE; i++)
-     if(myproc()->ofile[i])
-       np->ofile[i] = filedup(myproc()->ofile[i]);
-   np->cwd = idup(myproc()->cwd);
-
-   safestrcpy(np->name, myproc()->name, sizeof(myproc()->name));
-
-   pid = np->pid;
-
-   acquire(&ptable.lock);
-   np->state = RUNNABLE;
-   release(&ptable.lock);
-
-   return pid;  
-=======
 
 int clone(void *stack)
 {
@@ -671,7 +618,6 @@ int clone(void *stack)
   release(&ptable.lock);
 
   return pid;  
->>>>>>> Main
 }
 
 int join()
@@ -679,22 +625,14 @@ int join()
 
   struct proc *p;
   int haveKids, pid;
-<<<<<<< HEAD
-  
-=======
   struct proc *curproc = myproc();
->>>>>>> Main
 
   acquire(&ptable.lock);
   for(;;) {
     haveKids = 0;
 
     for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-<<<<<<< HEAD
-      if (p->parent != myproc() || p->isthread != 1 )
-=======
       if (p->parent != curproc || p->isthread != 1 )
->>>>>>> Main
         continue;
       haveKids = 1;
 
@@ -712,25 +650,13 @@ int join()
       }
     }
     
-<<<<<<< HEAD
-    if (!haveKids || myproc()->killed) {
-=======
     if (!haveKids || curproc->killed) {
->>>>>>> Main
       release(&ptable.lock);
       return -1;
     }
 
-<<<<<<< HEAD
-    sleep(myproc(), &ptable.lock);
-
-  }
-  return 0;
-}
-=======
     sleep(curproc, &ptable.lock);
 
   }
   return 0;
 }
->>>>>>> Main
