@@ -3,25 +3,30 @@
 #include "user.h"
 #include "mthread.c"
 
-int x = 0;
+int sum = 0;
+int arr[] = {1, 2, 3, 4}; // sum is 10
 
-void sum(void *y)
+void add(void *y)
 {
-    for(;;) {
-      x++;
-      sleep(100);
-    }
+    sum += *((int *) y);
+    return;
 }
 
 int main()
 {
-    int arr[] = {1};
-    thread_create(&sum, (void *)arr);
-    for(;;) {
-        x++;
-      printf(1, "x = %d\n", x);
-      sleep(100);
-    }
+  int i = 0;
+  for (i = 0; i < 4; ++i)
+  {
+    // sleep(100);
+    int pid = thread_create(&add, (void *)&arr[i]);
+    printf(1, "thread created with pid %d\n", pid);
+  }
+  for (i = 0; i < 4; ++i)
+  {
+    int pid = thread_join();
+    printf(1, "thread joined with pid %d\n", pid);
+  }
+  printf(1, "sum is: %d\n", sum);
 
-    exit(); 
+  exit(); 
 }

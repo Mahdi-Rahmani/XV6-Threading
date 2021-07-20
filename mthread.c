@@ -13,6 +13,10 @@ int thread_create(void (*fn) (void *), void *arg)
     if ((uint)ptr%PGSIZE)
         ptr += PGSIZE - (uint) ptr%PGSIZE;
 
+    // Putting args into top of stack in 0xFFFFFFFF
+    // *((int *)ptr + PGSIZE) = arg;
+    // *((int *)ptr + PGSIZE - 8) = fn;
+
     int tid = clone(ptr);
     if (tid < 0)
     {
