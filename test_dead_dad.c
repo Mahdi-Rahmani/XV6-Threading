@@ -25,7 +25,7 @@ int main(int argc, char *argv[])
   {
       int args[] = {1};
       thread_create(&long_function, (void *)args);
-      // sleep(100);
+      sleep(100);
   } 
   else 
   {

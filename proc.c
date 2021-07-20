@@ -162,7 +162,7 @@ growproc(int n)
 {
   uint sz;
   struct proc *curproc = myproc();
-
+  
   sz = curproc->sz;
   if(n > 0){
     if((sz = allocuvm(curproc->pgdir, sz, sz + n)) == 0)
@@ -300,9 +300,7 @@ wait(void)
       if(p->state == ZOMBIE){
         // Found one.
         pid = p->pid;
-        cprintf("before kstack.\n");
         kfree(p->kstack);
-        cprintf("after ^^^^^^^^\n");
         p->kstack = 0;
 
         for (q = ptable.proc; q < &ptable.proc[NPROC]; q++)
@@ -315,7 +313,6 @@ wait(void)
         p->parent = 0;
         p->name[0] = 0;
         p->killed = 0;
-        cprintf("#########.\n");
         p->state = UNUSED;
         release(&ptable.lock);
         return pid;
@@ -588,13 +585,15 @@ int clone(void *stack)
     return -1;
   
   // Grow size of process because of new stack
+  acquire(&ptable.lock);
   if ((added_size = growproc(PGSIZE)) < 0)
   {
     cprintf("Could not grow process.\n");
+    release(&ptable.lock);
     return -1;
   }
   cprintf("current size of process: %d\n", (int)main_thread->sz);
-  
+  release(&ptable.lock);
 
   // now we should fill some fields o shild_thread struct
   // in thread the parent thread and the child are point to one pagetable
